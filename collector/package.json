@@ -1,0 +1,22 @@
+{
+  "name": "scrapeforensics-collector",
+  "version": "0.1.0",
+  "description": "Role 2 module for ScrapeForensics — wraps the Bright Data CLI (create/run/heal/approve), tracks Collector IDs, and stores run/heal history for the rest of the team to build on.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "demo": "tsx src/demo.ts"
+  },
+  "dependencies": {
+    "cross-spawn": "^7.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.15.0",
+    "@types/node": "^20.14.0",
+    "@types/cross-spawn": "^6.0.6"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
