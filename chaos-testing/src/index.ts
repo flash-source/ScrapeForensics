@@ -7,3 +7,9 @@ export type { CollectorAdapter, Row, RunOutput } from "./adapters/types.js";
 export { MockCollectorAdapter } from "./adapters/mock.js";
 export { BrightDataCollectorAdapter } from "./adapters/brightdata.js";
 export type { BrightDataAdapterConfig } from "./adapters/brightdata.js";
+export {
+  createCloudflareTunnelPublisher,
+  createPageServer,
+  startCloudflaredTunnel,
+} from "./publish.js";
+export type { Publisher, PublisherOptions, PageServer, Tunnel } from "./publish.js";

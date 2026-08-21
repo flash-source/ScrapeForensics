@@ -68,35 +68,55 @@ CI, and fast iteration on the score.
 - **`score.ts`** — aggregates results into the Reliability Score (healed /
   partial / failed, field-recovery %, average recovery time).
 
-## Wiring the real Bright Data path
+## The real Bright Data path
 
-Two things the real adapter needs that the mock doesn't, because Bright Data
-scrapes a **public URL**, not an HTML string:
+Bright Data scrapes a **public URL**, not an HTML string, so the mutated pages
+have to be hosted somewhere it can reach — `localhost` won't do. `publish.ts`
+solves this with a local HTTP server fronted by a **Cloudflare quick tunnel**
+(`cloudflared`): a public `https://…trycloudflare.com` URL, no account, no config.
+The tunnel URL is stable for the session and the served HTML is swappable, so
+`publish(html)` just swaps the page and returns the same URL each time.
 
-1. An existing `collectorId` created against the same page shape.
-2. A `publish(html) -> publicUrl` function that serves each mutated page
-   somewhere Bright Data can reach (deployed static host, ngrok tunnel, …).
-   **localhost will not work.**
-
-```ts
-import { BrightDataCollectorAdapter } from "./adapters/brightdata.js";
-
-const adapter = new BrightDataCollectorAdapter({
-  collectorId: "c_xxx",
-  publish: async (html) => {
-    /* upload `html`, return its public URL */
-  },
-});
+### Run it
+```bash
+# 1. install cloudflared (once): https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+# 2. bdata login   (see ../collector/README.md), and claim the wemakedevs credits
+# 3. create a collector trained on the fixture's shape, once:
+npm run chaos:real            # prints the tunnel URL serving the healthy fixture
+#    -> in another shell: bdata scraper create <that-url> "extract title, price, rating"
+#    -> export COLLECTOR_ID=c_xxx
+COLLECTOR_ID=c_xxx npm run chaos:real -- -n 3
 ```
 
-Then pass `store.recordIncident` from the collector module as `recordIncident`
-in `runChaosBatch` so each break lands in the shared forensic history.
+`chaos:real` starts the tunnel on the healthy fixture, then runs the same
+BREAK → DIAGNOSE → HEAL → VERIFY → SCORE loop as the mock — except HEAL goes to
+Bright Data's real AI self-healing via the Doctor's heal prompt. It defaults to
+**3 mutations** (override with `-n`) because:
 
 **Heal is slow and costs credits** — minutes per call per Bright Data's docs
-(see `../collector/README.md`). The real adapter is for the live demo and a
-true score against Bright Data's own AI heal, *not* for "100 mutations in CI".
-Use `--mock` for volume; use the real adapter for the headline demo. Note that
-`reset()` is a no-op on a live collector (heals accumulate), so scope real
-batches to one field-family at a time or recreate the collector.
+(see `../collector/README.md`). This path is for the live demo and a true score
+against Bright Data's own AI heal, *not* "100 mutations in CI" — use `--mock`
+for volume. `reset()` is also a no-op on a live collector (heals accumulate), so
+keep real batches small or recreate the collector between fields.
+
+### Wiring it yourself
+`createCloudflareTunnelPublisher()` returns `{ url, publish, close }`; hand its
+`publish` straight to the adapter (this is what `run.ts --real` does):
+
+```ts
+import { createCloudflareTunnelPublisher, BrightDataCollectorAdapter } from "./index.js";
+
+const publisher = await createCloudflareTunnelPublisher({ initialHtml });
+const adapter = new BrightDataCollectorAdapter({
+  collectorId: "c_xxx",
+  publish: publisher.publish,
+});
+// …run the batch, then: await publisher.close();
+```
+
+Prefer a different host (ngrok, a deployed static bucket, …)? The adapter only
+needs any `publish: (html) => Promise<string>`; swap the publisher out. Pass
+`store.recordIncident` from the collector module as `recordIncident` in
+`runChaosBatch` so each break lands in the shared forensic history.
 
 See the root [README](../README.md) for how this fits the full pipeline.
