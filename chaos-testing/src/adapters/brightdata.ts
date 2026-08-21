@@ -104,18 +104,45 @@ export class BrightDataCollectorAdapter implements CollectorAdapter {
     return { rows, rowCount: res.rowCount };
   }
 
-  async heal(brokenFields: string[]): Promise<SelectorChange[]> {
+  async heal(
+    brokenFields: string[],
+    _baseline: Row[],
+    healPrompt?: string,
+  ): Promise<SelectorChange[]> {
     const { healCollector, verifyHeal } = await this.collector();
-    if (!this.currentUrl) throw new Error("setPage() must be called before heal()");
 
-    const whatBroke = `The following fields are returning empty: ${brokenFields.join(", ")}. The page's HTML structure changed.`;
-    const heal = await healCollector(this.config.collectorId, this.currentUrl, whatBroke, { autoApprove: true });
-    const verify = await verifyHeal(this.config.collectorId, this.currentUrl, this.requiredFields);
+    if (!this.currentUrl) {
+      throw new Error("setPage() must be called before heal()");
+    }
 
-    // Bright Data's diff is coarse (a summary string, not a clean before/after
-    // selector), so we report what we can: the summary, or recovery status.
-    const after = verify.success ? heal.diffSummary ?? "recovered" : null;
-    return brokenFields.map((field) => ({ field, before: "(bright data template)", after }));
+    const whatBroke =
+      healPrompt ??
+      `The following fields are returning empty: ${brokenFields.join(", ")}. The page's HTML structure changed.`;
+
+    const heal = await healCollector(
+      this.config.collectorId,
+      this.currentUrl,
+      whatBroke,
+      { autoApprove: true },
+    );
+
+    const verify = await verifyHeal(
+      this.config.collectorId,
+      this.currentUrl,
+      this.requiredFields,
+    );
+
+    const after = verify.success
+      ? heal.diffSummary ?? "recovered"
+      : null;
+
+    return brokenFields.map(
+      (field) => ({
+        field,
+        before: "(bright data template)",
+        after,
+      }),
+    );
   }
 }
 
