@@ -1,6 +1,6 @@
 # chaos-testing
 
-Role 3 — Chaos testing + verification. Owns **BREAK** and the **Scraper
+Chaos testing + verification. Owns **BREAK** and the **Scraper
 Reliability Score**.
 
 Instead of waiting for a real site to change, we deliberately mutate a sandbox
