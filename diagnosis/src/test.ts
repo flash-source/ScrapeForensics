@@ -196,6 +196,72 @@ runTest(
   true,
 );
 
+
+/* ------------------------------
+   Nested Bright Data field
+-------------------------------- */
+
+const brightDataHealthy = {
+  ...healthy,
+  data: [
+    {
+      title: "A Light in the Attic",
+      price: {
+        value: 51.77,
+        currency: "GBP",
+        symbol: "£",
+      },
+      stock_availability: "In stock (22 available)",
+    },
+  ],
+};
+
+const brightDataPriceBroken = {
+  ...brightDataHealthy,
+  data: [
+    {
+      title: "A Light in the Attic",
+      price: {
+        currency: "GBP",
+        symbol: "£",
+      },
+      stock_availability: "In stock (22 available)",
+    },
+  ],
+};
+
+const nestedDiagnosis = explainDiagnosis(
+  detectFailure(
+    brightDataHealthy,
+    brightDataPriceBroken,
+    ["title", "price.value", "stock_availability"],
+  ),
+);
+
+assert.equal(
+  nestedDiagnosis.failed,
+  true,
+);
+
+assert.equal(
+  nestedDiagnosis.failureType,
+  "field_degradation",
+);
+
+assert.ok(
+  nestedDiagnosis.affectedFields.includes(
+    "price.value",
+  ),
+);
+
+console.log(
+  "✓ nested Bright Data field degradation",
+);
+
+console.log(
+  `  price.value | ${nestedDiagnosis.severity}`,
+);
+
 /* ------------------------------
    Prompt test
 -------------------------------- */

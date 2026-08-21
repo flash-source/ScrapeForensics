@@ -12,19 +12,85 @@ function isPresent(value: unknown): boolean {
   );
 }
 
-function getFields(rows: unknown[]): string[] {
+/**
+ * Supports both:
+ *
+ * title
+ *
+ * and nested paths:
+ *
+ * price.value
+ * product.price.amount
+ */
+function getValue(
+  row: unknown,
+  path: string,
+): unknown {
+  if (!row || typeof row !== "object") {
+    return undefined;
+  }
+
+  return path
+    .split(".")
+    .reduce<unknown>(
+      (value, key) => {
+        if (
+          value === null ||
+          value === undefined ||
+          typeof value !== "object"
+        ) {
+          return undefined;
+        }
+
+        return (
+          value as Record<string, unknown>
+        )[key];
+      },
+      row,
+    );
+}
+
+function getFields(
+  rows: unknown[],
+): string[] {
   const fields = new Set<string>();
 
-  for (const row of rows) {
-    if (!row || typeof row !== "object") {
-      continue;
+  function collect(
+    value: unknown,
+    prefix = "",
+  ) {
+    if (
+      !value ||
+      typeof value !== "object" ||
+      Array.isArray(value)
+    ) {
+      return;
     }
 
-    for (const key of Object.keys(
-      row as Record<string, unknown>,
+    for (const [
+      key,
+      child,
+    ] of Object.entries(
+      value as Record<string, unknown>,
     )) {
-      fields.add(key);
+      const path = prefix
+        ? `${prefix}.${key}`
+        : key;
+
+      fields.add(path);
+
+      if (
+        child &&
+        typeof child === "object" &&
+        !Array.isArray(child)
+      ) {
+        collect(child, path);
+      }
     }
+  }
+
+  for (const row of rows) {
+    collect(row);
   }
 
   return [...fields].sort();
@@ -38,15 +104,12 @@ function successRate(
     return 0;
   }
 
-  const successful = rows.filter((row) => {
-    if (!row || typeof row !== "object") {
-      return false;
-    }
-
-    return isPresent(
-      (row as Record<string, unknown>)[field],
-    );
-  }).length;
+  const successful = rows.filter(
+    (row) =>
+      isPresent(
+        getValue(row, field),
+      ),
+  ).length;
 
   return successful / rows.length;
 }
@@ -62,61 +125,82 @@ export function compareRuns(
     ...getFields(current.data),
   ]);
 
-  return [...fields].sort().map((field) => {
-    const previousRate = successRate(
-      previous.data,
-      field,
-    );
+  return [...fields]
+    .sort()
+    .map((field) => {
+      const previousRate =
+        successRate(
+          previous.data,
+          field,
+        );
 
-    const currentRate = successRate(
-      current.data,
-      field,
-    );
+      const currentRate =
+        successRate(
+          current.data,
+          field,
+        );
 
-    return {
-      field,
-      previousSuccessRate: previousRate,
-      currentSuccessRate: currentRate,
-      drop: previousRate - currentRate,
+      return {
+        field,
 
-      previousSample:
-        (
-          previous.data[0] as
-            | Record<string, unknown>
-            | undefined
-        )?.[field],
+        previousSuccessRate:
+          previousRate,
 
-      currentSample:
-        (
-          current.data[0] as
-            | Record<string, unknown>
-            | undefined
-        )?.[field],
-    };
-  });
+        currentSuccessRate:
+          currentRate,
+
+        drop:
+          previousRate -
+          currentRate,
+
+        previousSample:
+          getValue(
+            previous.data[0],
+            field,
+          ),
+
+        currentSample:
+          getValue(
+            current.data[0],
+            field,
+          ),
+      };
+    });
 }
 
 export function compareSchemas(
   previous: RunResult,
   current: RunResult,
 ): SchemaComparison {
-  const previousFields = getFields(previous.data);
-  const currentFields = getFields(current.data);
+  const previousFields =
+    getFields(previous.data);
 
-  const previousSet = new Set(previousFields);
-  const currentSet = new Set(currentFields);
+  const currentFields =
+    getFields(current.data);
 
-  const removedFields = previousFields.filter(
-    (field) => !currentSet.has(field),
-  );
+  const previousSet =
+    new Set(previousFields);
 
-  const addedFields = currentFields.filter(
-    (field) => !previousSet.has(field),
-  );
+  const currentSet =
+    new Set(currentFields);
 
-  const unchangedFields = previousFields.filter(
-    (field) => currentSet.has(field),
-  );
+  const removedFields =
+    previousFields.filter(
+      (field) =>
+        !currentSet.has(field),
+    );
+
+  const addedFields =
+    currentFields.filter(
+      (field) =>
+        !previousSet.has(field),
+    );
+
+  const unchangedFields =
+    previousFields.filter(
+      (field) =>
+        currentSet.has(field),
+    );
 
   return {
     previousFields,

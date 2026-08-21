@@ -45,6 +45,24 @@ export function detectFailure(
         requiredFieldSet.has(field),
     );
 
+  /*
+   * A top-level field disappearing completely is
+   * a schema change.
+   *
+   * A nested field such as price.value disappearing
+   * while price still exists is field degradation.
+   */
+  const topLevelRemovedRequiredFields =
+    removedRequiredFields.filter(
+      (field) => !field.includes("."),
+    );
+
+  const hasTopLevelSchemaChange =
+    topLevelRemovedRequiredFields.length > 0 ||
+    schemaComparison.addedFields.some(
+      (field) => !field.includes("."),
+    );
+
   let failureType: FailureType = "healthy";
   let severity: Severity = "none";
   let likelyCause: LikelyCause = "none";
@@ -68,16 +86,17 @@ export function detectFailure(
   }
 
   /*
-   * 2. Schema change
+   * 2. Top-level schema change
+   *
+   * Give structural changes priority over field
+   * degradation because a completely removed field
+   * is evidence that the output schema changed.
    */
-  else if (
-    removedRequiredFields.length > 0 ||
-    schemaComparison.addedFields.length > 0
-  ) {
+  else if (hasTopLevelSchemaChange) {
     failed = true;
     failureType = "schema_change";
     severity =
-      removedRequiredFields.length > 0
+      topLevelRemovedRequiredFields.length > 0
         ? "high"
         : "medium";
     likelyCause = "schema_drift";
@@ -97,6 +116,12 @@ export function detectFailure(
 
   /*
    * 4. Single field degraded
+   *
+   * This includes nested fields such as:
+   *
+   * price.value
+   *
+   * where the parent price object still exists.
    */
   else if (degradedFields.length === 1) {
     failed = true;
@@ -108,11 +133,9 @@ export function detectFailure(
 
   return {
     failed,
-
     failureType,
     severity,
     likelyCause,
-
     confidence,
 
     previousRowCount:
@@ -127,7 +150,6 @@ export function detectFailure(
       ),
 
     fieldComparisons,
-
     schemaComparison,
 
     explanation: "",

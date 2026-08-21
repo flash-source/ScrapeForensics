@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "tsx src/test.ts",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "dry-run": "tsx src/integration-test.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
