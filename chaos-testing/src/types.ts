@@ -1,24 +1,17 @@
-/**
- * Types for the chaos harness. Kept separate from collector's own types so
- * this module can be reasoned about (and unit-tested in --mock mode) without
- * a Bright Data login.
- */
-
 /** The kinds of controlled breakage the mutation engine can introduce. */
 export type MutationKind =
-  | "rename-class" // .price -> .product-price
-  | "drop-attribute" // remove data-testid / itemprop the scraper leaned on
-  | "drop-class-keep-testid" // the canonical case: .price className removed, [data-testid] stays
-  | "move-element" // relocate the field out of its expected parent
+  | "rename-class" // .a-offscreen -> .a-offscreen-v2
+  | "strip-classes" // remove the element's class attribute entirely
+  | "drop-attribute" // remove a data-*/aria attribute the scraper may lean on
+  | "move-element" // relocate the field out of its expected parent card
   | "wrap-nesting" // add an extra wrapper element around the field
-  | "change-tag" // <p class="price"> -> <div class="price">
+  | "change-tag" // <span class="a-size-medium"> -> <div class="a-size-medium">
   | "remove-element"; // field deleted entirely — intentionally unrecoverable
 
 export interface Mutation {
   kind: MutationKind;
   /** Human label for the incident log / report. */
   label: string;
-  /** Which logical field this mutation targets (title | price | stock). */
   targetField: string;
   /** Applies the mutation to an HTML string and returns the mutated HTML. */
   apply: (html: string) => string;

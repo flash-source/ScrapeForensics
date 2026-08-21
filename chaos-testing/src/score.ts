@@ -1,9 +1,3 @@
-/**
- * Aggregate a batch of ChaosResults into the Scraper Reliability Score — the
- * single measurable number that's the whole point of chaos testing. "Our
- * scraper self-heals" becomes "96% field recovery, 4.2s average recovery".
- */
-
 import type { ChaosResult, ReliabilityScore } from "./types.js";
 
 export function scoreResults(results: ChaosResult[]): ReliabilityScore {
@@ -23,7 +17,7 @@ export function scoreResults(results: ChaosResult[]): ReliabilityScore {
   const recoveryTimes = broken.filter((r) => r.recoveryMs > 0).map((r) => r.recoveryMs);
   const avgRecoveryMs = recoveryTimes.length ? recoveryTimes.reduce((a, b) => a + b, 0) / recoveryTimes.length : 0;
 
-  // Headline: healed counts full, partial half, failed nothing — over broken cases.
+  // Headline: healed counts full, partial half, failed nothing over broken cases.
   const score = broken.length === 0 ? 100 : ((healed + partial * 0.5) / broken.length) * 100;
 
   return {

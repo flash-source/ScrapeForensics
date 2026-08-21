@@ -1,20 +1,23 @@
 /**
  * The mutation engine — the BREAK half of chaos testing. Each mutation takes
- * the sandbox HTML and returns a deliberately-broken copy, the way a real site
- * change would look: a renamed class, a dropped attribute, a moved element,
- * extra nesting, a swapped tag, or a removed field.
+ * the sandbox HTML and returns a deliberately-broken copy, the way a real
+ * Amazon redesign would look: a renamed class, stripped classes, a dropped
+ * attribute, a moved element, extra nesting, a swapped tag, or a removed field.
  *
- * These are pure string -> string transforms so they can run against a local
+ * These are pure string -> string transforms so they can run against the local
  * fixture (--mock) or against HTML you serve to a real Bright Data collector.
+ * They operate on the element the field's selector actually matches (deriving
+ * the class from that element), so they work with compound Amazon selectors
+ * like `.a-price .a-offscreen` and `h2 span`, not just single-class ones.
  */
 
 import * as cheerio from "cheerio";
 import { RECORD_SELECTOR, FIELD_SELECTORS } from "./fixtures.js";
 import type { Mutation, MutationKind } from "./types.js";
 
-/** Strip the leading "." from a class selector like ".price" -> "price". */
-function className(fieldSelector: string): string {
-  return fieldSelector.replace(/^\./, "");
+/** First class on an element, e.g. "a-offscreen" — what a class selector keys on. */
+function firstClassOf(el: cheerio.Cheerio<any>): string | undefined {
+  return (el.attr("class") ?? "").split(/\s+/).filter(Boolean)[0];
 }
 
 function forEachField(
@@ -30,48 +33,49 @@ function forEachField(
 
 /** Build the concrete mutation set for a given target field. */
 function mutationsForField(field: string): Mutation[] {
-  const cls = className(FIELD_SELECTORS[field]);
-
   return [
     {
       kind: "rename-class",
-      label: `rename .${cls} class on every ${field}`,
+      label: `rename the CSS class on every ${field} (e.g. .a-offscreen -> .a-offscreen-v2)`,
       targetField: field,
       apply: (html) =>
         forEachField(html, field, (_, el) => {
-          el.removeClass(cls).addClass(`${cls}-v2`);
+          const cls = firstClassOf(el);
+          if (cls) el.removeClass(cls).addClass(`${cls}-v2`);
         }),
     },
     {
-      kind: "drop-class-keep-testid",
-      label: `drop .${cls} class, leave data-testid (the classic redesign)`,
+      kind: "strip-classes",
+      label: `strip the class attribute off every ${field} (no class hook left)`,
       targetField: field,
       apply: (html) =>
         forEachField(html, field, (_, el) => {
-          el.removeClass(cls);
+          el.removeAttr("class");
         }),
     },
     {
       kind: "drop-attribute",
-      label: `remove data-testid from every ${field}`,
+      label: `remove data-*/aria attributes from every ${field}`,
       targetField: field,
       apply: (html) =>
         forEachField(html, field, (_, el) => {
-          el.removeAttr("data-testid");
+          for (const name of Object.keys(el.attr() ?? {})) {
+            if (name.startsWith("data-") || name.startsWith("aria-")) el.removeAttr(name);
+          }
         }),
     },
     {
       kind: "wrap-nesting",
-      label: `wrap every ${field} in an extra <span>`,
+      label: `wrap every ${field} in an extra <div>`,
       targetField: field,
       apply: (html) =>
         forEachField(html, field, ($, el) => {
-          el.wrap($("<span class=\"field-wrap\"></span>"));
+          el.wrap($('<div class="wrap-injected"></div>'));
         }),
     },
     {
       kind: "change-tag",
-      label: `swap the ${field} element's tag name`,
+      label: `swap the ${field} element's tag name (keeps classes)`,
       targetField: field,
       apply: (html) =>
         forEachField(html, field, ($, el) => {
@@ -90,15 +94,14 @@ function mutationsForField(field: string): Mutation[] {
         const $ = cheerio.load(html);
         $(RECORD_SELECTOR).each((_, card) => {
           const $card = $(card);
-          const field$ = $card.find(FIELD_SELECTORS[field]);
-          field$.insertAfter($card); // now a sibling of the card, not inside it
+          $card.find(FIELD_SELECTORS[field]).insertAfter($card); // now a sibling, not inside
         });
         return $.html();
       },
     },
     {
       kind: "remove-element",
-      label: `delete every ${field} element (unrecoverable)`,
+      label: `delete every ${field} element`,
       targetField: field,
       apply: (html) =>
         forEachField(html, field, (_, el) => {
@@ -132,7 +135,7 @@ export function mutationBatch(fields: string[], count: number): Mutation[] {
 
 export const MUTATION_KINDS: MutationKind[] = [
   "rename-class",
-  "drop-class-keep-testid",
+  "strip-classes",
   "drop-attribute",
   "wrap-nesting",
   "change-tag",

@@ -1,12 +1,3 @@
-/**
- * The chaos harness — the measurable core of Role 3.
- *
- * For each mutation: start from the healthy baseline, BREAK the page, confirm
- * something the scraper needs actually dropped out, HEAL, VERIFY the fields came
- * back, and time the recovery. Every cycle is one ChaosResult; the batch of them
- * feeds the Reliability Score.
- */
-
 import type { CollectorAdapter, Row } from "./adapters/types.js";
 import type { ChaosResult, Mutation } from "./types.js";
 

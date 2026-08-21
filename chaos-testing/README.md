@@ -11,17 +11,25 @@ fields came back, and time the recovery. Run a batch of mutations and it turns
 ```
   Scraper Reliability Score
   ─────────────────────────
-  12 breakages introduced
-  9 successfully healed
+  11 breakages introduced
+  8 successfully healed
   0 partially recovered
   3 failed
-  9 resilient (mutation didn't break a required field)
+  10 resilient (mutation didn't break a required field)
 
-  75% field recovery
+  73% field recovery
   0.0s average recovery time
 
-  ►  Reliability Score: 75 / 100
+  ►  Reliability Score: 73 / 100
 ```
+
+**Target: Amazon search results.** Fields are `title`, `price`, `rating` — what
+an Amazon search card exposes (stock lives on the product page, not the
+listing). The fixture (`src/fixtures/amazon-search.html`) is a synthetic page in
+Amazon's real structure — `div[data-component-type="s-search-result"]`,
+`.a-price .a-offscreen`, `h2 span`, `.a-icon-alt` — with made-up product data;
+swap in a real Bright Data snapshot once the collector is wired. The harness
+only needs the structure, so nothing else changes.
 
 ## Run it
 
@@ -32,24 +40,26 @@ npm run chaos:mock -- -n 100  # 100 mutations for a headline number
 npm run typecheck
 ```
 
-`--mock` runs the entire BREAK → HEAL → VERIFY → SCORE loop locally against a
-fixture page (`src/fixtures/product-page.html`) with a small deterministic
+`--mock` runs the entire BREAK → HEAL → VERIFY → SCORE loop locally against the
+fixture page (`src/fixtures/amazon-search.html`) with a small deterministic
 healer — no Bright Data login and no credits spent. Use it for development,
 CI, and fast iteration on the score.
 
 ## How it works
 
 - **`mutations.ts`** — the break engine. Pure `html -> html` transforms:
-  `rename-class`, `drop-class-keep-testid`, `drop-attribute`, `wrap-nesting`,
-  `change-tag`, `move-element`, `remove-element`. These mirror how real site
-  redesigns look (e.g. the classic `.product-card .price` →
-  `[data-testid="price"]` swap).
+  `rename-class`, `strip-classes`, `drop-attribute`, `wrap-nesting`,
+  `change-tag`, `move-element`, `remove-element`. These mirror how real Amazon
+  redesigns look (e.g. `.a-price .a-offscreen` → `.a-offscreen-v2` after a class
+  rename). They operate on the element the field selector actually matches, so
+  they work with compound selectors, not just single-class ones.
 - **`adapters/`** — the harness talks to a scraper through one small interface
   so the scoring logic is identical for mock and real runs:
   - `mock.ts` — local cheerio extraction + a heuristic healer that re-derives a
-    working selector from the last-good values. Intentionally a *lower bound* on
-    a real AI healer (a fully deleted element is unrecoverable here), so the
-    number is honest.
+    working selector by locating the last-good values (tightest element first).
+    Intentionally a *lower bound* on a real AI healer, so the number is honest —
+    e.g. stripping every class off the price leaves no clean hook and it fails,
+    while a deleted price is still recovered from Amazon's visible copy.
   - `brightdata.ts` — drives a real collector via Role 2's exported
     `runCollector` / `healCollector` / `verifyHeal`.
 - **`harness.ts`** — for each mutation: start from the healthy baseline, break
