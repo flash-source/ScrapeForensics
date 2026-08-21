@@ -29,8 +29,8 @@ export function runCli(args: string[], timeoutMs = 20 * 60 * 1000): Promise<CliR
       reject(new Error(`${CLI_BIN} ${args.join(" ")} timed out after ${timeoutMs}ms`));
     }, timeoutMs);
 
-    proc.stdout.on("data", (d) => (stdout += d.toString()));
-    proc.stderr.on("data", (d) => (stderr += d.toString()));
+    proc.stdout?.on("data", (d) => (stdout += d.toString()));
+    proc.stderr?.on("data", (d) => (stderr += d.toString()));
     proc.on("close", (code) => {
       clearTimeout(timer);
       resolve({ code: code ?? -1, stdout, stderr });
