@@ -100,11 +100,11 @@ export class MockCollectorAdapter implements CollectorAdapter {
   private reselect(field: string, expected: string[], records: any[]): FieldSelector | null {
     const $ = this.$;
 
-    // Scoped: within record 0, find an element whose text is the expected value,
-    // derive a selector from it, then confirm it holds for every record.
-    const first = records[0] ? $(records[0]).find("*").toArray() : [];
-    for (const node of first) {
-      if (clean($(node).text()) !== expected[0]) continue;
+    // Scoped: within record 0, find the elements whose text is the expected
+    // value, derive a selector, and confirm it holds for every record. Tightest
+    // match first, so we land on the leaf (.a-offscreen-v2) rather than a
+    // coincidentally-matching ancestor (.a-price).
+    for (const node of this.matchesFor(records[0], expected[0])) {
       const candidate = deriveSelector($(node));
       if (!candidate) continue;
       const worksEverywhere = records.every((rec, i) => clean($(rec).find(candidate).first().text()) === expected[i]);
@@ -113,8 +113,7 @@ export class MockCollectorAdapter implements CollectorAdapter {
 
     // Global: the element may have been moved out of its record. Find a selector
     // whose document-order matches line up with the expected values per record.
-    for (const node of $("body").find("*").toArray()) {
-      if (clean($(node).text()) !== expected[0]) continue;
+    for (const node of this.matchesFor($("body").get(0), expected[0])) {
       const candidate = deriveSelector($(node));
       if (!candidate) continue;
       const matches = $(candidate).toArray();
@@ -123,6 +122,17 @@ export class MockCollectorAdapter implements CollectorAdapter {
       if (zipsUp) return { selector: candidate, mode: "global" };
     }
 
-    return null; // element (and its value) are gone — unrecoverable
+    return null; // the value has no home left in the DOM — unrecoverable
+  }
+
+  /** Descendants of `root` whose text equals `value`, tightest (fewest children) first. */
+  private matchesFor(root: any, value: string): any[] {
+    if (!root) return [];
+    const $ = this.$;
+    return $(root)
+      .find("*")
+      .toArray()
+      .filter((node) => clean($(node).text()) === value)
+      .sort((a, b) => $(a).find("*").length - $(b).find("*").length);
   }
 }

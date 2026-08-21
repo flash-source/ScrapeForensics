@@ -1,8 +1,3 @@
-/**
- * Public surface of the chaos-testing module, for the rest of ScrapeForensics
- * (e.g. a dashboard or the live demo script) to import.
- */
-
 export * from "./types.js";
 export * from "./mutations.js";
 export * from "./harness.js";

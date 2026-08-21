@@ -1,16 +1,3 @@
-/**
- * CLI entry for the chaos harness.
- *
- *   npm run chaos:mock            # local, credit-free, runs in ~seconds
- *   npm run chaos:mock -- -n 100  # 100 mutations for a headline number
- *   npm run chaos                 # same, but --mock must still be passed until
- *                                 # a real collectorId + public publish() is wired
- *
- * The real Bright Data path needs a collector id and a way to publish each
- * mutated page to a public URL (see adapters/brightdata.ts). Until that's wired
- * for your environment, use --mock.
- */
-
 import { loadFixture, REQUIRED_FIELDS } from "./fixtures.js";
 import { mutationBatch } from "./mutations.js";
 import { MockCollectorAdapter } from "./adapters/mock.js";
@@ -53,8 +40,7 @@ async function main() {
 
   console.log(`\nChaos run — adapter: ${adapter.name}, ${mutations.length} mutations, fields: ${REQUIRED_FIELDS.join(", ")}`);
 
-  // In-memory incident log for the mock; the real pipeline passes
-  // store.recordIncident here so incidents land in collector's forensic history.
+  // In-memory incident log for the mock
   const incidents: unknown[] = [];
   const recordIncident = async (r: ChaosResult, _baseline: Row[]) => {
     const id = `chaos-${incidents.length + 1}`;
