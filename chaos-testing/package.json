@@ -1,0 +1,24 @@
+{
+  "name": "scrapeforensics-chaos",
+  "version": "0.1.0",
+  "description": "Role 3 module for ScrapeForensics — controlled DOM chaos (BREAK) plus the batch heal/verify loop that produces the Scraper Reliability Score.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "chaos": "tsx src/run.ts",
+    "chaos:mock": "tsx src/run.ts --mock",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "scrapeforensics-collector": "file:../collector"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.15.0",
+    "@types/node": "^20.14.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
