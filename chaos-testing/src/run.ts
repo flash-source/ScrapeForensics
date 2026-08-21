@@ -23,23 +23,51 @@ function parseArgs(argv: string[]): Args {
   return args;
 }
 
-async function buildAdapter(mock: boolean): Promise<CollectorAdapter> {
-  if (mock) return new MockCollectorAdapter();
-  throw new Error(
-    "Real Bright Data mode isn't wired for this environment yet.\n" +
-      "It needs a collectorId + a publish(html)->publicUrl function (see adapters/brightdata.ts).\n" +
-      "Run with --mock to exercise the full BREAK -> HEAL -> VERIFY -> SCORE loop locally.",
-  );
+interface BuiltAdapter {
+  adapter: CollectorAdapter;
+  /** Tear down anything the adapter started (e.g. the tunnel); no-op for the mock. */
+  cleanup: () => Promise<void>;
+}
+
+async function buildAdapter(mock: boolean, initialHtml: string, count: number): Promise<BuiltAdapter> {
+  if (mock) return { adapter: new MockCollectorAdapter(), cleanup: async () => {} };
+
+  const collectorId = process.env.COLLECTOR_ID;
+  if (!collectorId) {
+    throw new Error(
+      "Real Bright Data mode needs COLLECTOR_ID — a collector trained on the fixture's page shape.\n" +
+        "Also requires `cloudflared` on PATH (or CLOUDFLARED_BIN). See the chaos-testing README.\n" +
+        "Run with --mock to exercise the full BREAK -> HEAL -> VERIFY -> SCORE loop locally instead.",
+    );
+  }
+
+  // Serve the mutated pages over a public Cloudflare quick tunnel so the real
+  // Collector can reach them. Start on the healthy fixture so the URL/collector
+  // can be sanity-checked before the first break.
+  const { createCloudflareTunnelPublisher } = await import("./publish.js");
+  const { BrightDataCollectorAdapter } = await import("./adapters/brightdata.js");
+
+  console.log("Starting Cloudflare tunnel (serving the healthy fixture)...");
+  const publisher = await createCloudflareTunnelPublisher({ initialHtml });
+  console.log(`  public URL : ${publisher.url}`);
+  console.log(`  collector  : ${collectorId} (must be trained on this page's shape)`);
+  console.warn(`  note: heal is a real AI job — minutes and credits per call. Running ${count} mutation(s).`);
+
+  const adapter = new BrightDataCollectorAdapter({ collectorId, publish: publisher.publish });
+  return { adapter, cleanup: () => publisher.close() };
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const adapter = await buildAdapter(args.mock);
-
   const html = await loadFixture();
-  const mutations = mutationBatch(REQUIRED_FIELDS, args.count);
 
-  console.log(`\nChaos run — adapter: ${adapter.name}, ${mutations.length} mutations, fields: ${REQUIRED_FIELDS.join(", ")}`);
+  // Real heal is a slow, paid AI job — default to a tiny batch unless a size was given.
+  const count = args.mock ? args.count : args.count || 3;
+  const mutations = mutationBatch(REQUIRED_FIELDS, count);
+
+  const { adapter, cleanup } = await buildAdapter(args.mock, html, mutations.length);
+  try {
+    console.log(`\nChaos run — adapter: ${adapter.name}, ${mutations.length} mutations, fields: ${REQUIRED_FIELDS.join(", ")}`);
 
   // In-memory incident log for the mock
   const incidents: unknown[] = [];
@@ -126,9 +154,12 @@ async function main() {
     },
   );
 
-  console.log("\n" + formatBreakdown(results));
-  console.log(formatScore(scoreResults(results)));
-  console.log(`  ${incidents.length} incidents recorded.\n`);
+    console.log("\n" + formatBreakdown(results));
+    console.log(formatScore(scoreResults(results)));
+    console.log(`  ${incidents.length} incidents recorded.\n`);
+  } finally {
+    await cleanup();
+  }
 }
 
 main().catch((err) => {
