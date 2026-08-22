@@ -133,6 +133,35 @@ export function mutationBatch(fields: string[], count: number): Mutation[] {
   return out;
 }
 
+/**
+ * A plain-language description of what a mutation changed, for the heal prompt.
+ * Chaos knows the ground-truth change; describing its *kind* (not the exact new
+ * selector) gives Bright Data's AI healer a concrete problem statement — the
+ * sort of hint a snapshot-diffing Doctor could realistically infer — without
+ * handing it the answer.
+ */
+export function mutationEvidence(mutation: Mutation): string {
+  const f = mutation.targetField;
+  switch (mutation.kind) {
+    case "rename-class":
+      return `the "${f}" element's CSS class was renamed, so the old class selector no longer matches it`;
+    case "strip-classes":
+      return `the "${f}" element's class attribute was removed entirely — no class hook is left, so it must be found by structure or content`;
+    case "drop-attribute":
+      return `data-*/aria attributes were stripped from the "${f}" element, so any selector keyed on them now misses`;
+    case "wrap-nesting":
+      return `the "${f}" element was wrapped in an extra container, so a direct-child selector no longer reaches it (a descendant selector still would)`;
+    case "change-tag":
+      return `the "${f}" element's HTML tag changed while its classes stayed the same, so a tag-specific selector no longer matches`;
+    case "move-element":
+      return `the "${f}" element was moved out of its product card — it is still on the page but no longer nested where it used to be`;
+    case "remove-element":
+      return `the "${f}" element was removed from its usual position (its value may still appear elsewhere on the page, e.g. a visible duplicate)`;
+    default:
+      return `the "${f}" field's markup changed`;
+  }
+}
+
 export const MUTATION_KINDS: MutationKind[] = [
   "rename-class",
   "strip-classes",

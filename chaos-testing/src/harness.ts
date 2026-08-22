@@ -1,3 +1,4 @@
+import { mutationEvidence } from "./mutations.js";
 import type { CollectorAdapter, Row } from "./adapters/types.js";
 import type { ChaosResult, Mutation } from "./types.js";
 
@@ -119,6 +120,16 @@ export async function runOneMutation(
         );
     }
 
+    // Hand the healer concrete evidence of what changed. Chaos knows the
+    // ground-truth mutation; the Doctor only saw the data. We describe the
+    // *kind* of change (not the fix) and fold it back into the diagnosis so
+    // the recorded incident shows the prompt we actually sent.
+    const evidenceLine = `Observed DOM change: ${mutationEvidence(mutation)}.`;
+    const healPrompt = diagnosis?.healPrompt
+      ? `${diagnosis.healPrompt}\n\n${evidenceLine}`
+      : evidenceLine;
+    if (diagnosis) diagnosis.healPrompt = healPrompt;
+
     // HEAL + VERIFY
     const start =
       Date.now();
@@ -127,7 +138,7 @@ export async function runOneMutation(
       await adapter.heal(
         fieldsBroken,
         baseline,
-        diagnosis?.healPrompt,
+        healPrompt,
       );
 
     const healedRun =
