@@ -45,7 +45,7 @@ export async function healCollector(
   options: { autoApprove?: boolean } = {},
 ): Promise<HealResult> {
   const args = ["scraper", "heal", collectorId, whatBroke, "--url", url];
-  if (options.autoApprove) args.push("--auto-approve");
+  if (options.autoApprove) args.push("--auto-approve", "--auto-save");
 
   const { result, data } = await runCliToFile<{
     status: string;
