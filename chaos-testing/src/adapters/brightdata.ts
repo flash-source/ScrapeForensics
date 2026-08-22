@@ -115,15 +115,19 @@ export class BrightDataCollectorAdapter implements CollectorAdapter {
       throw new Error("setPage() must be called before heal()");
     }
 
+    // `whatBroke` (the prompt) is the ONLY channel for telling Bright Data's
+    // healer what changed: per Role 2, heal's --url is cosmetic and heal works
+    // off the collector's last run + this text. So the harness enriches the
+    // prompt with the chaos mutation evidence — that's what lands here.
     const whatBroke =
       healPrompt ??
       `The following fields are returning empty: ${brokenFields.join(", ")}. The page's HTML structure changed.`;
 
     const heal = await healCollector(
       this.config.collectorId,
-      this.currentUrl,
+      this.currentUrl, // cosmetic for heal; still needed for run()/verifyHeal() below
       whatBroke,
-      { autoApprove: true },
+      { autoApprove: true }, // collector sends --auto-approve --auto-save so the fix actually persists
     );
 
     const verify = await verifyHeal(
