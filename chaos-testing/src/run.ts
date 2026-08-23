@@ -7,6 +7,7 @@ import { scoreResults, formatScore, formatBreakdown } from "./score.js";
 import type { CollectorAdapter } from "./adapters/types.js";
 import type { ChaosResult } from "./types.js";
 import type { Row } from "./adapters/types.js";
+import * as store from "../../collector/src/store.ts";
 
 interface Args {
   mock: boolean;
@@ -127,6 +128,21 @@ async function main() {
             }`,
         )
         .join("; "),
+    });
+
+    await store.recordIncident({
+      id,
+      collectorId: process.env.COLLECTOR_ID ?? adapter.name,
+      detectedAt: new Date().toISOString(),
+      fieldsAffected: r.fieldsBroken,
+      rowsAffected: r.rowsAffected,
+      healPrompt: diagnosis?.healPrompt ?? r.label,
+      verifiedSuccess: r.outcome === "healed",
+      failureType: diagnosis?.failureType,
+      severity: diagnosis?.severity,
+      likelyCause: diagnosis?.likelyCause,
+      diagnosisConfidence: diagnosis?.confidence,
+      diagnosisExplanation: diagnosis?.explanation,
     });
 
     return id;

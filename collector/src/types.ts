@@ -37,4 +37,9 @@ export interface IncidentRecord {
   verifiedAt?: string;
   verifiedSuccess?: boolean;
   notes?: string;
+  failureType?: string;
+  severity?: string;
+  likelyCause?: string;
+  diagnosisConfidence?: number;
+  diagnosisExplanation?: string;
 }
