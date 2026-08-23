@@ -108,6 +108,13 @@ async function main() {
     console.log(`Outcome: ${r.outcome}`);
     console.log(`Recovery time: ${r.recoveryMs}ms`);
 
+    for (const c of r.selectorChanges) {
+      if (c.healNote || c.viewUrl) {
+        console.log(`  [${c.field}] bright data: ${c.healStatus ?? "?"} — ${c.healNote ?? "no diff summary"}`);
+        if (c.viewUrl) console.log(`  [${c.field}] view: ${c.viewUrl}`);
+      }
+    }
+
     incidents.push({
       id,
       detectedAt: new Date().toISOString(),

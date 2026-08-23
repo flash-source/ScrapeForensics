@@ -22,6 +22,9 @@ export interface SelectorChange {
   field: string;
   before: string;
   after: string | null; // null == the healer could not find a working selector
+  healStatus?: string;
+  healNote?: string;   // Bright Data's diff_summary, kept regardless of verify outcome
+  viewUrl?: string;    // link to the diff in Bright Data's dashboard
 }
 
 /** Outcome of a single mutate -> run -> heal -> verify cycle. */

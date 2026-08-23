@@ -43,6 +43,7 @@ interface CollectorRunResult {
 interface CollectorHealResult {
   status: string;
   diffSummary?: string;
+  viewUrl?: string;
 }
 interface CollectorVerifyResult {
   success: boolean;
@@ -145,6 +146,9 @@ export class BrightDataCollectorAdapter implements CollectorAdapter {
         field,
         before: "(bright data template)",
         after,
+        healStatus: heal.status,
+        healNote: heal.diffSummary,
+        viewUrl: heal.viewUrl,
       }),
     );
   }

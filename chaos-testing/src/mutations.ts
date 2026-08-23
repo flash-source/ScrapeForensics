@@ -116,7 +116,15 @@ function mutationsForField(field: string): Mutation[] {
  * run is reproducible and the Reliability Score is comparable across runs.
  */
 export function allMutations(fields: string[]): Mutation[] {
-  return fields.flatMap((f) => mutationsForField(f));
+  const perField = fields.map((f) => mutationsForField(f));
+  const maxLen = Math.max(...perField.map((m) => m.length));
+  const out: Mutation[] = [];
+  for (let k = 0; k < maxLen; k++) {
+    for (const list of perField) {
+      if (list[k]) out.push(list[k]);
+    }
+  }
+  return out;
 }
 
 /**
