@@ -23,6 +23,12 @@ fields came back, and time the recovery. Run a batch of mutations and it turns
   ►  Reliability Score: 73 / 100
 ```
 
+> **Mock vs. real:** the block above is the deterministic mock healer — a
+> documented *lower bound* on a real AI (see below). Bright Data's actual AI
+> heal, tested against a live collector, scored **25/100** on its first real
+> run. See [`results/real-run-1.md`](./results/real-run-1.md) for the full
+> breakdown
+
 **Target: Amazon search results.** Fields are `title`, `price`, `rating` — what
 an Amazon search card exposes (stock lives on the product page, not the
 listing). The fixture (`src/fixtures/amazon-search.html`) is a synthetic page in
@@ -80,11 +86,15 @@ The tunnel URL is stable for the session and the served HTML is swappable, so
 ### Run it
 ```bash
 # 1. install cloudflared (once): https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+#    Windows: if you grabbed the .exe directly (not via a package manager), it
+#    won't be on PATH — point CLOUDFLARED_BIN at it instead, e.g.:
+#      $env:CLOUDFLARED_BIN = "C:\Users\you\Downloads\cloudflared-windows-amd64.exe"
 # 2. bdata login   (see ../collector/README.md), and claim the wemakedevs credits
 # 3. create a collector trained on the fixture's shape, once:
-npm run chaos:real            # prints the tunnel URL serving the healthy fixture
+npm run chaos:bootstrap       # starts the tunnel, prints its URL, holds it open
 #    -> in another shell: bdata scraper create <that-url> "extract title, price, rating"
-#    -> export COLLECTOR_ID=c_xxx
+#    -> Ctrl+C the bootstrap script once you have the collector_id
+# PowerShell: set env vars on their own line first, not VAR=value before the command
 COLLECTOR_ID=c_xxx npm run chaos:real -- -n 3
 ```
 
