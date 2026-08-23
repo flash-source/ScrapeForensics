@@ -6,6 +6,7 @@
   "main": "src/index.ts",
   "scripts": {
     "chaos": "tsx src/run.ts",
+    "chaos:bootstrap": "tsx src/bootstrap-tunnel.ts",
     "chaos:mock": "tsx src/run.ts --mock",
     "chaos:real": "tsx src/run.ts",
     "typecheck": "tsc --noEmit"
