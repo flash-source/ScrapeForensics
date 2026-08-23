@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Scraper Reliability &middot; ScrapeForensics</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f9a90'/%3E%3Cpath d='M9 17.5 14 22l9-11' fill='none' stroke='%23eef8f6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -56,14 +57,17 @@
   .sec-head .note{font-family:var(--mono);font-size:12px;color:var(--faint)}
 
   /* score cards */
-  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-  @media(max-width:720px){.cards{grid-template-columns:1fr}}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:480px){.cards{grid-template-columns:1fr}}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;
     padding:20px;box-shadow:var(--shadow);position:relative}
   .card .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
     font-weight:600;padding:3px 8px;border-radius:5px;display:inline-block}
-  .tag.mock{color:var(--resilient);background:color-mix(in srgb,var(--resilient) 15%,transparent)}
-  .tag.real{color:var(--accent);background:var(--accent-soft)}
+  .tag.mock{color:var(--resilient);background:color-mix(in srgb,var(--resilient) 14%,var(--surface));
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--resilient) 32%,transparent),0 0 14px -6px var(--resilient)}
+  .tag.real{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 36%,transparent),0 0 14px -6px var(--accent)}
   .card .cid{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:12px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .score{font-family:var(--mono);font-weight:600;letter-spacing:-.03em;line-height:1;
@@ -103,15 +107,15 @@
   .runbtn:disabled{opacity:.5;cursor:default}
 
   .stepper{display:flex;gap:0;padding:16px 18px 4px;flex-wrap:wrap}
-  .step{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .step{display:flex;align-items:center;gap:13px;font-family:var(--mono);font-size:12px;color:var(--faint)}
   .step .dot{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);
     display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;
     background:var(--surface);transition:all .3s}
   .step.active .dot{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
   .step.active{color:var(--ink)}
   .step.done .dot{background:var(--accent);border-color:var(--accent);color:#04211f}
-  .step .arm{width:22px;height:1.5px;background:var(--border);margin:0 6px}
-  @media(max-width:640px){.step .lab{display:none}.step .arm{width:12px}}
+  .arm{display:inline-block;width:22px;height:1.5px;background:var(--border);margin:0 12px;flex:none}
+  @media(max-width:640px){.step .lab{display:none}.arm{width:12px}}
 
   .stage{display:grid;grid-template-columns:1.15fr .85fr;gap:0}
   @media(max-width:820px){.stage{grid-template-columns:1fr}}
@@ -123,12 +127,13 @@
   .urlbar{font-family:var(--mono);font-size:11px;color:var(--faint);background:var(--surface-2);
     border:1px solid var(--border);border-radius:7px;padding:6px 10px;margin-bottom:12px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tablewrap{overflow-x:auto}
   table.scrape{width:100%;border-collapse:collapse;font-size:13px}
   table.scrape th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
     color:var(--faint);text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);font-weight:600}
   table.scrape td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
   table.scrape tr:last-child td{border-bottom:0}
-  td.price,td.rating,th.price,th.rating{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  table.scrape td.price,table.scrape td.rating,table.scrape th.price,table.scrape th.rating{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
   .cell{transition:color .35s,background .35s}
   .cell.broken{position:relative}
   .cell.broken .val{color:var(--failed);text-decoration:line-through;opacity:.55}
@@ -178,8 +183,14 @@
   .stack{display:flex;height:26px;border-radius:7px;overflow:hidden;border:1px solid var(--border);background:var(--surface-2)}
   .stack > i{display:flex;align-items:center;justify-content:center;font-family:var(--mono);
     font-size:11px;font-weight:600;color:#fff;min-width:0;transition:flex .8s ease}
-  .seg-healed{background:var(--healed)} .seg-partial{background:var(--partial)}
-  .seg-failed{background:var(--failed)} .seg-resilient{background:var(--resilient);color:#04211f}
+  .seg-healed{background:linear-gradient(180deg,color-mix(in srgb,var(--healed) 78%,white),var(--healed));
+    box-shadow:inset 0 1px 0 color-mix(in srgb,white 35%,transparent)}
+  .seg-partial{background:linear-gradient(180deg,color-mix(in srgb,var(--partial) 78%,white),var(--partial));
+    box-shadow:inset 0 1px 0 color-mix(in srgb,white 35%,transparent)}
+  .seg-failed{background:linear-gradient(180deg,color-mix(in srgb,var(--failed) 78%,white),var(--failed));
+    box-shadow:inset 0 1px 0 color-mix(in srgb,white 35%,transparent)}
+  .seg-resilient{background:linear-gradient(180deg,color-mix(in srgb,var(--resilient) 78%,white),var(--resilient));color:#04211f;
+    box-shadow:inset 0 1px 0 color-mix(in srgb,white 45%,transparent)}
   .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--muted)}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .ldot{width:10px;height:10px;border-radius:3px;display:inline-block}
@@ -197,8 +208,14 @@
   .inc .mut .meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .pill{font-family:var(--mono);font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;
     white-space:nowrap;text-transform:uppercase;letter-spacing:.04em}
-  .p-healed{color:#fff;background:var(--healed)} .p-partial{color:#231a06;background:var(--partial)}
-  .p-failed{color:#fff;background:var(--failed)} .p-resilient{color:#04211f;background:var(--resilient)}
+  .p-healed{color:var(--healed);background:color-mix(in srgb,var(--healed) 16%,var(--surface));
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--healed) 38%,transparent),0 0 12px -6px var(--healed)}
+  .p-partial{color:var(--partial);background:color-mix(in srgb,var(--partial) 18%,var(--surface));
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--partial) 42%,transparent),0 0 12px -6px var(--partial)}
+  .p-failed{color:var(--failed);background:color-mix(in srgb,var(--failed) 16%,var(--surface));
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--failed) 38%,transparent),0 0 12px -6px var(--failed)}
+  .p-resilient{color:var(--resilient);background:color-mix(in srgb,var(--resilient) 16%,var(--surface));
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--resilient) 38%,transparent),0 0 12px -6px var(--resilient)}
   .chip{font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:5px;border:1px solid var(--border)}
   .sev-high,.sev-critical{color:var(--failed);border-color:color-mix(in srgb,var(--failed) 45%,var(--border))}
   .inc .ibody{padding:0 18px 18px;border-top:1px solid var(--border)}
@@ -232,12 +249,13 @@
 
   <section>
     <div class="sec-head"><h2>Chaos replay</h2>
-      <span class="note">replay of recorded runs &middot; press Run</span></div>
+      <span class="note">replay of recorded runs, paced for viewing &middot; real recovery time shown at right &middot; press Run</span></div>
     <div class="replay">
       <div class="controls">
         <div class="segbtns" id="runseg" role="group" aria-label="Select run">
           <button data-run="r2" aria-pressed="true">Real &middot; run-2 (fresh)</button>
           <button data-run="r1" aria-pressed="false">Real &middot; run-1 (reused)</button>
+          <button data-run="r3" aria-pressed="false">Real &middot; run-3 (2nd fresh)</button>
         </div>
         <select class="mut" id="mutsel" aria-label="Select mutation"></select>
         <button class="runbtn" id="runbtn">&#9654; Run chaos test</button>
@@ -249,10 +267,12 @@
         <div class="panel left">
           <h3>Target &middot; Amazon search results</h3>
           <div class="urlbar" id="urlbar">GET https://&hellip;.trycloudflare.com &rarr; collector</div>
-          <table class="scrape">
-            <thead><tr><th>Title</th><th class="price">Price</th><th class="rating">Rating</th></tr></thead>
-            <tbody id="tbody"></tbody>
-          </table>
+          <div class="tablewrap">
+            <table class="scrape">
+              <thead><tr><th>Title</th><th class="price">Price</th><th class="rating">Rating</th></tr></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
         </div>
         <div class="panel">
           <div class="doctor" id="doctor">
@@ -272,11 +292,19 @@
       <span class="note">healed counts full, partial half, failed nothing &middot; higher is better</span></div>
     <div class="cards" id="cards"></div>
     <div class="callout">
-      <span class="big">73 &rarr; 25 &rarr; 0</span>
+      <span class="big">73 &rarr; 25 &rarr; 0 &rarr; 100</span>
       <p>The mock healer's <strong>73/100</strong> is documented as a <strong>lower-bound</strong> estimate of a
-      real AI. Bright Data's actual AI heal came in at <strong>25</strong> (reused collector) and
-      <strong>0</strong> (fresh collector) &mdash; <strong>below the floor</strong>. A fresh collector was
-      <em>more</em> fragile to class changes, not less.</p>
+      real AI. Across three independently-generated real collectors, Bright Data's actual heals landed at
+      <strong>25</strong>, <strong>0</strong>, and <strong>100</strong> &mdash; two well below the mock's floor,
+      one perfect. The 100 isn't a better heal: nothing broke, so nothing needed healing.</p>
+    </div>
+    <div class="callout" style="border-left-color:var(--accent)">
+      <span class="big" style="color:var(--accent)">2 / 3</span>
+      <p>The sharper finding isn't the score &mdash; it's that <strong>the same create prompt produced
+      structurally different scrapers</strong> across three generations. 2 of 3 anchored title extraction on
+      a CSS class (fragile to exactly the mutations tested, and failed to recover when broken); 1 of 3 used
+      something structural and was immune to the same changes. Reliability here depends on how consistently
+      the AI <em>builds</em> a scraper, not just whether healing works afterward.</p>
     </div>
   </section>
 
@@ -317,8 +345,11 @@ const runsMeta = [
    score:73, recovery:"0.0s", fieldRec:"73%", counts:{healed:8,partial:0,failed:3,resilient:10}},
   {id:"r1", tag:"REAL · RUN-1", cls:"real", name:"Real — reused collector", cid:"c_mt5jdynw1jjnzz9k00",
    score:25, recovery:"311.6s", fieldRec:"50%", counts:{healed:0,partial:1,failed:1,resilient:1}},
+  // TODO verify: real-run-1.md lists this run's collector as c_mt5mr7vx1nnmymm8u8 — double-check which id is right before demo
   {id:"r2", tag:"REAL · RUN-2", cls:"real", name:"Real — fresh collector", cid:"c_mt5yqe6g2h99u2v3bf",
    score:0, recovery:"17.0s", fieldRec:"0%", counts:{healed:0,partial:0,failed:2,resilient:0}},
+  {id:"r3", tag:"REAL · RUN-3", cls:"real", name:"Real — 2nd fresh collector", cid:"c_mt5pdmat17gmw53bst",
+   score:100, recovery:"0.0s", fieldRec:"100%", counts:{healed:0,partial:0,failed:0,resilient:3}},
 ];
 // replay-able mutations with real recorded data
 const replays = {
@@ -346,16 +377,32 @@ const replays = {
      evidence:"data-*/aria attributes were stripped, but the collector didn't key on them — extraction held.",
      recovered:[]},
   ],
+  r3:[
+    {label:"Rename the CSS class on every title", breaks:[], failureType:null, severity:null,
+     conf:null, likely:null, outcome:"resilient", recovery:"—",
+     evidence:"The title element's CSS class was renamed, but this collector's extraction wasn't keyed on that class — extraction held.",
+     recovered:[]},
+    {label:"Strip the class attribute off every title", breaks:[], failureType:null, severity:null,
+     conf:null, likely:null, outcome:"resilient", recovery:"—",
+     evidence:"The title element's class attribute was removed, but this collector doesn't rely on a class hook — extraction held.",
+     recovered:[]},
+    {label:"Remove data-*/aria attributes from every title", breaks:[], failureType:null, severity:null,
+     conf:null, likely:null, outcome:"resilient", recovery:"—",
+     evidence:"data-*/aria attributes were stripped, but the collector didn't key on them — extraction held.",
+     recovered:[]},
+  ],
 };
 const incidents = [
   {run:"run-1", mutation:"Rename CSS class on every title", fields:["title","price","rating"], note:"0 rows returned",
    failureType:"no_rows", severity:"critical", conf:null, likely:"extraction_failure", outcome:"partial", recovery:"350.4s",
    evidence:"No rows came back at all — a critical extraction failure.",
-   diagnosis:"The collector returned an empty result set."},
+   diagnosis:"The collector returned an empty result set.",
+   prompt:"The scraper has degraded.\n\nFailure type: no_rows\nSeverity: critical\nLikely cause: extraction_failure\n\nPrevious rows: 8\nCurrent rows: 0\n\nAffected fields: input: 100.0% -> 0.0%; price: 100.0% -> 0.0%; product_page_url: 100.0% -> 0.0%; rating: 100.0% -> 0.0%; title: 100.0% -> 0.0%\n\nRemoved fields: input, price, product_page_url, rating, title\nAdded fields: none\n\nDiagnosis:\nThe scraper returned 0 rows compared with 8 previously. The target page may be unavailable, the extraction logic may have failed, or the page structure may have changed significantly.\n\nRepair the extraction logic against the current page.\nPreserve the existing output schema and field meanings.\nDo not remove unaffected fields.\nDo not invent new fields unless they are required to restore an existing field.\n\nObserved DOM change: the \"title\" element's CSS class was renamed, so the old class selector no longer matches it."},
   {run:"run-1", mutation:"Strip class attribute off every title", fields:["title"], note:"schema changed, field removed",
    failureType:"schema_change", severity:"high", conf:null, likely:"schema_drift", outcome:"failed", recovery:"272.7s",
    evidence:"The title element's class attribute was removed entirely — no class hook is left.",
-   diagnosis:"The output schema changed between runs. Removed field: title."},
+   diagnosis:"The output schema changed between runs. Removed field: title.",
+   prompt:"The scraper has degraded.\n\nFailure type: schema_change\nSeverity: high\nLikely cause: schema_drift\n\nPrevious rows: 8\nCurrent rows: 8\n\nAffected fields: title: 100.0% -> 0.0%\n\nRemoved fields: title\nAdded fields: none\n\nDiagnosis:\nThe output schema changed between runs. Removed fields: title. This may indicate that the target site's structure or field naming changed.\n\nRepair the extraction logic against the current page.\nPreserve the existing output schema and field meanings.\nDo not remove unaffected fields.\nDo not invent new fields unless they are required to restore an existing field.\n\nObserved DOM change: the \"title\" element's class attribute was removed entirely — no class hook is left, so it must be found by structure or content."},
   {run:"run-1", mutation:"Remove data-*/aria attributes from every title", fields:[], note:"required fields survived",
    failureType:null, severity:null, conf:null, likely:null, outcome:"resilient", recovery:"—",
    evidence:"data-*/aria attributes were stripped, but the collector didn't key on them.",
@@ -370,6 +417,18 @@ const incidents = [
    evidence:"The title element's class attribute was removed entirely — no class hook is left.",
    diagnosis:"The output schema changed between runs. Removed fields: title.",
    prompt:"The scraper has degraded.\n\nFailure type: schema_change\nSeverity: high\nLikely cause: schema_drift\n\nAffected fields: title: 100.0% -> 0.0%\nRemoved fields: title\n\nRepair the extraction logic against the current page.\nPreserve the existing output schema and field meanings.\n\nObserved DOM change: the \"title\" element's class attribute was removed entirely — no class hook is left, so it must be found by structure or content."},
+  {run:"run-3", mutation:"Rename CSS class on every title", fields:[], note:"required fields survived",
+   failureType:null, severity:null, conf:null, likely:null, outcome:"resilient", recovery:"—",
+   evidence:"The title element's CSS class was renamed, but this collector's extraction wasn't keyed on that class.",
+   diagnosis:"Mutation didn't break a required field; no heal needed."},
+  {run:"run-3", mutation:"Strip class attribute off every title", fields:[], note:"required fields survived",
+   failureType:null, severity:null, conf:null, likely:null, outcome:"resilient", recovery:"—",
+   evidence:"The title element's class attribute was removed, but this collector doesn't rely on a class hook.",
+   diagnosis:"Mutation didn't break a required field; no heal needed."},
+  {run:"run-3", mutation:"Remove data-*/aria attributes from every title", fields:[], note:"required fields survived",
+   failureType:null, severity:null, conf:null, likely:null, outcome:"resilient", recovery:"—",
+   evidence:"data-*/aria attributes were stripped, but the collector didn't key on them.",
+   diagnosis:"Mutation didn't break a required field; no heal needed."},
 ];
 const esc = s => (s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const bandColor = s => s>=70?"var(--healed)":s>=40?"var(--partial)":"var(--failed)";
@@ -410,6 +469,7 @@ function resetStage(){
   document.getElementById("evidence").textContent="Press Run to break a field and watch the heal.";
   document.getElementById("healbox").innerHTML="<span>Idle — no heal in progress.</span>";
   document.getElementById("outcome").className="outcome";
+  document.getElementById("runbtn").innerHTML="&#9654; Run chaos test";
 }
 
 async function runReplay(){
@@ -479,6 +539,20 @@ async function playReplay(m){
   // 5. SCORE
   renderStepper(4,3);
   showOutcome(m);
+  advanceMutation();
+}
+function advanceMutation(){
+  const btn=document.getElementById("runbtn");
+  const sel=document.getElementById("mutsel");
+  if(curMut < replays[curRun].length-1){
+    curMut++;
+    sel.value=curMut;
+    btn.innerHTML=`&#9654; Next: ${esc(replays[curRun][curMut].label)}`;
+  } else {
+    curMut=0;
+    sel.value=curMut;
+    btn.innerHTML="&#8635; Replay this run from the start";
+  }
 }
 function showOutcome(m){
   const o=document.getElementById("outcome");
@@ -560,7 +634,7 @@ document.getElementById("themebtn").addEventListener("click",()=>{
 });
 
 fillMutations(); resetStage(); renderCards(); renderBreakdown(); renderIncidents();
-document.getElementById("stamp").textContent="n=2 · "+incidents.length+" incidents · "+new Date().toISOString().slice(0,10);
+document.getElementById("stamp").textContent = runsMeta.filter(r=>r.tag.startsWith("REAL")).length + " real runs · " + incidents.length + " incidents · " + new Date().toISOString().slice(0,10);
 </script>
 </body>
 </html>
